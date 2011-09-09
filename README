@@ -1,0 +1,4 @@
+Navi is a short term interests notification system. Users submit urls which they are interested in following and Navi does an in browser update of any changes to those urls.
+
+For example if a user were interested in new comments on a certain reddit thread they would add that url to Navi, which would notify them of any new posts made.
+ 

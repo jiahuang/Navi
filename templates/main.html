@@ -1,5 +1,132 @@
 {%extends "layout.html" %}
+{% block head%}
+<script type="text/javascript">
+$(document).ready(function() {
+	$('article.tabs section > h3').click(function(){
+			$('article.tabs section').removeClass('current');
+			$(this).closest('section').addClass('current');
+	});
+	
+	$('#loginFormButton').click(function(){
+		$.post('/login', 
+			{ email: $('#email-login').val(), password: $('#pw-login').val()},
+			function(data){
+				console.log(data);
+				if ('error' in data)
+					alert(data.error)
+				else
+					window.location.reload();
+			},
+			'json'
+		)
+		return false;
+	});
+	
+	$('#signupFormButton').click(function(){
+		$.post('/new', 
+			{ email: $('#email-signup').val(), password: $('#pw-signup').val()},
+			function(data){
+				console.log(data);
+				if ('error' in data)
+					alert(data.error)
+				else
+					window.location.reload();
+			},
+			'json'
+		)
+		return false;
+	});
+	
+	$(document).keypress(function(e) {
+		if(e.keyCode == 13) {
+			// add item to dom
+			
+			// add a url 
+			$.post('/urls', 
+				{url:$('#addUrl').val()},
+				function(data){
+					alert(data);
+				} 
+			)
+		}
+	});
+});
+</script>
+
+{% endblock%}
 {% block body %}
-	<h2>Navi - A short term notification system</h2>
-	<input type="text"/>
+	
+	{% if session.logged_in %}
+		<input type=text id="addUrl" ></input>
+		<div id="ajax_load">
+		</div>
+	{% else %}
+		<div id="loginBox">
+			 <article class="tabs">
+				<section>
+					<h3>Log In</h3>
+					<div>
+						<form id="loginForm">
+							<table>
+								<tr>
+									<td align="right">
+										Email 
+									</td>
+									<td>
+										<input type="text" name="email" id="email-login"/>
+									</td>
+									
+								</tr>
+								<tr>
+									<td align="right">
+										Password 
+									</td>
+									<td>
+										<input type="password" name="password" id="pw-login"/> 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<input type="submit" id="loginFormButton" style="float:right; margin-top:20px;" value="Log In"/>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</section>
+				<section class="current">
+					<h3>Sign Up</h3>
+					<div>
+						<form id="signupForm">
+							<table>
+								<tr>
+									<td align="right">
+										Email 
+									</td>
+									<td>
+										<input type="text"  name="email" id="email-signup"/>
+									</td>
+									
+								</tr>
+								<tr>
+									<td align="right">
+										Password 
+									</td>
+									<td>
+										<input type="password"  name="password" id="pw-signup"/> 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<input type="submit" id="signupFormButton" style="float:right; margin-top:20px;" value="Create Account"/>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</section>
+			</article>
+
+		</div>
+	{% endif %} 
 {% endblock %}

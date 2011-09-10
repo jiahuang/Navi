@@ -31,7 +31,7 @@ class RedditParser():
 		# check if url is thread or comment
 		resArr = filter(None, urlparts.path.split("/"))
 		
-		url += ".json" if url[-1] == '/' else url+= "/.json"
+		url = url + ".json" if url[-1] == '/' else url+"/.json"
 		
 		if len(resArr) == 5:
 			return self.getCommentsFromThread(url)

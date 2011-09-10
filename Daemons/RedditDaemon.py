@@ -21,7 +21,7 @@ class RedditDaemon():
 		
 		# update users
 		db.users.update({'urls.url':url, 'expirationDate':{'$lte':datetime.datetime.now()}}, 
-			{'$set':{'urls.$.newNotifications':newVal, 'updateDate':datetime.datetime.now()}})
+			{'$set':{'urls.$.newNotifications':newVal, 'urls.$.updateDate':datetime.datetime.now()}})
 		
 	def scrape(self):
 		''' Goes through list of links to scrape and updates db'''

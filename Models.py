@@ -17,7 +17,6 @@ class Users(Document):
 	__database__ = DATABASE_NAVI
 	structure = {
 		'email' : unicode,
-		'username': unicode,
 		'password' : unicode,
 		'expireDays' : int,
 		'urls' : [{'url': unicode, 
@@ -30,12 +29,12 @@ class Users(Document):
 	# ensuring unique emails
 	indexes = [ 
 		{ 
-			'fields':['email', 'username'], 
+			'fields':['email'], 
 			'unique':True, 
 		} 
 	]
 	use_dot_notation = True 
-	required_fields = ['email', 'username', 'password']
+	required_fields = ['email', 'password']
 
 @connection.register
 class CachedUrls(Document):

@@ -1,0 +1,154 @@
+.clear{
+	clear:both;
+}
+
+body { font-family: "Varela", sans-serif }
+
+body {
+	font-family: helvetica, arial, sans-serif;
+
+}
+
+/* FLASHES */
+.flash {
+	background: #CEE5F5;
+	border: 1px solid #AACBE2;
+	padding: 10px;
+	margin-bottom: 15px;
+}
+
+.error {
+	background: #F0D6D6;
+	padding: 10px;
+}
+
+#navHeader{
+	margin-top:5px;
+	float:right;
+	padding-right: 5px;
+	font-size: 12px;
+}
+
+/* FOOTER */
+#footer {
+	width: 900px;
+	margin: 0 auto;
+	padding-top: 10px;
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	text-align: center;
+	font-size: 12px;
+	padding-bottom:30px;
+}
+
+#footer a {
+	color: #1144AA;
+	text-decoration: none;
+}
+
+#footer a:hover {
+	color: black;
+	text-decoration: underline;
+}
+
+#footer a:active {
+	color: black;
+	text-decoration: underline;
+}
+
+/* MAIN BODY */
+.dgreen {
+	color:#195429;
+}
+
+.gray{
+	color:#8C8E8F;
+}
+
+.dblue {
+	color:#3D667D;
+}
+
+.lblue {
+	color:#CEE5F5;
+}
+
+.red {
+	color:#92140C;
+}
+
+.main {
+	width: 900px;
+	margin: auto;
+}
+
+.main p {
+	margin-bottom: 15px;
+}
+
+.main a {
+	color: #1144AA;
+	text-decoration: none;
+}
+
+#NaviHeader {
+	margin:auto; width:80px; margin-top:100px; font-family: "Droid Sans"; font-size:50px; 
+}
+
+#addUrl {
+	width:600px;
+	margin: 10px auto;
+	display: block;
+	font-size: 16px;
+	padding: 5px;
+}
+
+#loginBox {
+	width:300px;
+	margin: 10px auto;
+	display: block;
+}
+
+.tabs {
+	height: 270px;
+	overflow: hidden;
+	position: relative;
+	z-index: 1;
+	display: block;
+}
+.tabs section {
+	float: left;
+	z-index: 1;
+}
+.tabs section h3 {
+	margin: 0 3px 0 0;
+	background-color: #CEE5F5;
+	padding: 3px 10px;
+	font: bold 12px Arial;
+	-webkit-border-radius: 5px 5px 0 0;
+	-moz-border-radius: 5px 5px 0 0;
+	cursor: hand;
+	cursor: pointer;
+	border-radius: 5px 5px 0 0;
+}
+
+.tabs section.current h3 {background-color:white; border-top: solid 2px #CEE5F5; border-left: solid 2px #CEE5F5; border-right: solid 2px #BAD3E0; cursor: default; }
+
+.tabs section div {
+	border: solid 2px #CEE5F5;
+	position: absolute;
+	left: 0;
+	z-index: 2;
+	width: 270px;
+	-webkit-border-radius: 0 5px 5px 5px;
+	-moz-border-radius: 0 5px 5px 5px;
+	border-radius: 0 5px 5px 5px;
+	display: none;
+	padding: 10px;
+	font: 12px Arial;
+}
+
+.tabs section.current div { display: block; }
+

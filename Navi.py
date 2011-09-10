@@ -18,15 +18,32 @@ import datetime, sys, json, time, uuid, subprocess
 import bcrypt
 sys.path.append("Parsers/")
 from MasterParser import MasterParser
-from Models import db
+from Models import *
 
 ########################################################################
 # Configuration
 ########################################################################
 
+DEBUG = True
 # create app
 app = Flask(__name__)
 app.config.from_object(__name__)
+
+########################################################################
+# Helper functions
+########################################################################
+def validate_session_user():
+	if 'uid' in session and 'logged_in' in session and session['logged_in']:
+		return True
+	return False 
+	
+def get_user():
+	if validate_session_user():
+		return db.Users.find_one({'_id':session['uid']})
+	return None
+
+def json_res(obj):
+	return Response(json.dumps(obj), mimetype='application/json')
 
 ########################################################################
 # Routes
@@ -38,37 +55,102 @@ def error(error_msg):
 
 @app.route('/')
 def main():
-	# redirect logged in users
-	return render_template('main.html')
+	user = get_user()
+	return render_template('main.html', user=user)
 
-# TODO: add login route
-
+@app.route('/logout')
+def logout():
+	session.pop('logged_in', None)
+	session.pop('uid', "")
+	session.pop('email', "")
+	flash('You were logged out')
+	return redirect(url_for('main'))
+	
 '''
-/users/<username>
-	Gets
-		displays urls tracked by that user
-		?edit displays the editing controls
+/login
 	Posts
-		updates user
+		logs in user
 '''
-@app.route('/users/<username>')
-def user(username):
-	user = db.Users.find_one({'username':username.decode()})
+@app.route('/login', methods=['POST'])
+def login():
+	user = db.Users.find_one({'email': request.form.get('email')})
+	
+	if not user:
+		return json_res({'error':'Either the username or the password is not in our system'})
+	
+	hash = None
+	try:
+		hash = bcrypt.hashpw(request.form.get('password'), user.password)
+	except:
+		pass
+	if hash != user.password:
+		return json_res({'error':'Either the username or the password is not in our system'})
+		
+	session['logged_in'] = True
+	session['uid'] = user._id
+	session['email'] = get_user().email
+	
+	return json_res({'loggedin':'true'})
+	
+'''
+/new
+	Posts
+		creates new user
+'''
+@app.route('/new', methods=['POST'])
+def new():
+	user = db.Users()
+	# check to make sure a user of that username and email doesn't already exist
+	checkUser = db.Users.find_one({'email':request.form.get('email')})
+	if checkUser != None:
+		print "user exists"
+		return json_res({'error':'User with this name already exists'})
+		
+	user.email = request.form.get('email')
+	user.expireDays = 3 
+	user.password = bcrypt.hashpw(request.form.get('password'), bcrypt.gensalt()).decode()
+	user.totalNotifications = 0
+	user.save()	
+	
+	session['logged_in'] = True
+	session['uid'] = user._id
+	session['email'] = request.form['email']
+		
+	return json_res({'loggedin':'true'})
+	
+'''
+/urls
+	Posts
+		adds url to user
+'''
+@app.route('/urls', methods=['POST'])
+def urls():
+	
+	user = get_user()
+	if user == None:
+		return json_res({'error':'You must be logged in for submitting urls'})
+		
 	currTime = datetime.datetime.now()
-	if request.method == 'GET':
-		return render_template('user.html', user=user)
-	else: # add new url
-		url = request.form.get("url")
-		# spin off reddit parser and find number of current comments
-		mParser = MasterParser()
-		comments = mParser.parseFromUrl(url)
-		db.Users.update({'username':username.decode()}, {'$push':{'urls':{
-			'url:url', 'oldNotifications':comments, 
-			'newNotifications':comments, 'timeUpdated': currTime, 
-			'expirationDate': currTime + datetime.timedelta(days=user.expireDays)}}})
-		return render_template('user.html', user=user)
-	return redirect(url_for('error', 'Could not find user'+username))
+	print request.form
+	url = request.form.get("url")
+	# use parser and find number of current comments
+	mParser = MasterParser()
+	comments = mParser.parseFromUrl(url)
+	expireDate = currTime + datetime.timedelta(days=user.expireDays)
+	# collection update
+	db.users.update({'email':user.email}, {'$push':{'urls':{
+		'url':url, 'oldNotifications':comments, 
+		'newNotifications':comments, 'updateDate': currTime, 
+		'expirationDate': expireDate}}})
+	
+	return redirect(url_for('user'))
 
+@app.route('/user', methods=['GET'])
+def user():
+	user = get_user()
+	if user == None:
+		return False
+	return render_template('user.html', user=user)
 
 ########################################################################
 # Entry

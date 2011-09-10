@@ -8,7 +8,7 @@ class MasterParser():
 	def parseFromUrl(self, url):
 		urlparts = urlparse(url)
 		if urlparts.netloc == "www.reddit.com":
-			return self.redditParser.getNotificationsFromUrl(url)
+			return int(self.redditParser.getNotificationsFromUrl(url))
 		# TODO: Add other parsers
 			
 		raise Exception, "Site is not reddit.com"

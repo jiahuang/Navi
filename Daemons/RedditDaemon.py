@@ -4,7 +4,8 @@ sys.path.append("..")
 from RedditParser import RedditParser
 from Models import db
 
-class RedditDaemon():
+class RedditDaemon(NotificationDaemon):
+	"""
 	def getUrls(self):
 		''' returns dictionary of unique urls waiting for 
 		updates with the current num of notifications '''
@@ -22,11 +23,11 @@ class RedditDaemon():
 		# update users
 		db.users.update({'urls.url':url, 'expirationDate':{'$lte':datetime.datetime.now()}}, 
 			{'$set':{'urls.$.newNotifications':newVal, 'urls.$.updateDate':datetime.datetime.now()}})
-		
+	"""	
 	def scrape(self):
 		''' Goes through list of links to scrape and updates db'''
 		parser = RedditParser()
-		urls = self.getUrls()
+		urls = self.getUrls("reddit.com")
 		for url in urls:
 			oldNum = url.comments
 			newNum = parser.getNotificationsFromUrl(url.url)

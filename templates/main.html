@@ -58,8 +58,33 @@ $(document).ready(function() {
 	
 	{% if session.logged_in %}
 		<input type=text id="addUrl" ></input>
-		<div id="ajax_load">
+		<table style="width:800px; margin:30px auto; display:block;">
+			<tr style="background-color:#CEE5F5; height:30px;">
+				<td><div class="notification">#</div></td>
+				<td><div class="header">Url</div> </td>
+				<td><div class="header">Date Added</div> </td>
+				<td><div class="header">Expired</div></td>
+			</tr>
+		</table>
+		<div id="urlbox" >
+			<div id="titleBar" >
+			<div style="padding-top:5px;">
+				
+				
+				
+				
+			</div>
+			</div>
+			<div id="ajax_load" style="height:30px;">
+				<div style="padding-top:5px;">
+				<span class="notification" style="margin-left: 10px;">10</span>
+				<!-- only allow 80 characters -->
+				<span style="margin-left:10px; font: 12px Arial;">http://www.reddit.com/r/worldnews/comments/k8xx8/the_palestinians_have_officially_launched_their/c2ifdtb</span> 
+				<span style="margin-left:10px; font: 12px Arial;">11/10/1991 5:55pm</span> 
+				</div>
+			</div>
 		</div>
+		
 	{% else %}
 		<div id="loginBox">
 			 <article class="tabs">

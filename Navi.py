@@ -135,15 +135,19 @@ def urls():
 	url = request.form.get("url")
 	# use parser and find number of current comments
 	mParser = MasterParser()
-	comments = mParser.parseFromUrl(url)
-	expireDate = currTime + datetime.timedelta(days=user.expireDays)
-	# collection update
-	db.users.update({'email':user.email}, {'$push':{'urls':{
-		'url':url, 'oldNotifications':comments, 
-		'newNotifications':comments, 'updateDate': currTime, 
-		'expirationDate': expireDate}}})
+	try:
+		comments = mParser.parseFromUrl(url)
+		expireDate = currTime + datetime.timedelta(days=user.expireDays)
+		# collection update
+		db.users.update({'email':user.email}, {'$push':{'urls':{
+			'url':url, 'oldNotifications':comments, 
+			'newNotifications':comments, 'updateDate': currTime, 
+			'expirationDate': expireDate}}})
+	except:
+		e = sys.exc_info()[1]
+		return json_res({'error':str(e)})
 	
-	return redirect(url_for('user'))
+	return json_res({'error':'false'})
 
 @app.route('/user', methods=['GET'])
 def user():

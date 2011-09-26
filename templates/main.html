@@ -2,6 +2,8 @@
 {% block head%}
 <script type="text/javascript">
 $(document).ready(function() {
+	var rowId = 0;
+	
 	$('article.tabs section > h3').click(function(){
 			$('article.tabs section').removeClass('current');
 			$(this).closest('section').addClass('current');
@@ -12,8 +14,10 @@ $(document).ready(function() {
 			{ email: $('#email-login').val(), password: $('#pw-login').val()},
 			function(data){
 				console.log(data);
-				if ('error' in data)
+				if ('error' in data){
+					// TODO: swap this out for a flashed message
 					alert(data.error)
+				}
 				else
 					window.location.reload();
 			},
@@ -40,12 +44,44 @@ $(document).ready(function() {
 	$(document).keypress(function(e) {
 		if(e.keyCode == 13) {
 			// add item to dom
-			
+			// grab url
+			var url = $('#addUrl').val();
+			var d = new Date();
+			var id = rowId;
+			var tr = $('<tr>')
+				.append($('<td>')
+					.append($('<div>')
+						.attr('class', 'no_notification')
+						.text('0')
+					)
+				).append($('<td>')
+					.append($('<div>')
+						.attr('class', 'url')
+						.text(url)
+					)
+				).append($('<td>')
+					.append($('<div>')
+						.attr('class', 'time')
+						.text(d.getMonth()+"/"+d.getDate()+" "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds())
+					)
+				).append($('<td>')
+					.append($('<div>')
+						.attr('class', 'expired')
+					)
+				).attr('id', id);
+			rowId++;
+			$('#urlTable tr:first').after(tr);
 			// add a url 
 			$.post('/urls', 
-				{url:$('#addUrl').val()},
+				{'url':url},
 				function(data){
-					alert(data);
+					console.log(data);
+					// if item could not be correctly processed, flash message and delete added row
+					if (data.error != 'false'){
+						alert(data.error);
+						alert(id);
+						$('#'+id).remove();
+					}
 				} 
 			)
 		}
@@ -58,32 +94,14 @@ $(document).ready(function() {
 	
 	{% if session.logged_in %}
 		<input type=text id="addUrl" ></input>
-		<table style="width:800px; margin:30px auto; display:block;">
-			<tr style="background-color:#CEE5F5; height:30px;">
-				<td><div class="notification">#</div></td>
-				<td><div class="header">Url</div> </td>
-				<td><div class="header">Date Added</div> </td>
-				<td><div class="header">Expired</div></td>
+		<table id="urlTable" style="width:800px; margin:30px auto; display:block;" border="0" cellspacing="0">
+			<tr id="headerRow" style="background-color:#CEE5F5; height:30px;">
+				<td width="50px"><div class="notification" style="width:13px; margin-left:auto; margin-right:auto;">#</div></td>
+				<td width="600px"><div class="header" style="width:25px; margin-left:auto; margin-right:auto;">Url</div> </td>
+				<td width="80px"><div class="header" style="width:55px; margin-left:auto; margin-right:auto;">Added</div> </td>
+				<td width="80px"><div class="header" style="width:60px; margin-left:auto; margin-right:auto;">Expired</div></td>
 			</tr>
 		</table>
-		<div id="urlbox" >
-			<div id="titleBar" >
-			<div style="padding-top:5px;">
-				
-				
-				
-				
-			</div>
-			</div>
-			<div id="ajax_load" style="height:30px;">
-				<div style="padding-top:5px;">
-				<span class="notification" style="margin-left: 10px;">10</span>
-				<!-- only allow 80 characters -->
-				<span style="margin-left:10px; font: 12px Arial;">http://www.reddit.com/r/worldnews/comments/k8xx8/the_palestinians_have_officially_launched_their/c2ifdtb</span> 
-				<span style="margin-left:10px; font: 12px Arial;">11/10/1991 5:55pm</span> 
-				</div>
-			</div>
-		</div>
 		
 	{% else %}
 		<div id="loginBox">

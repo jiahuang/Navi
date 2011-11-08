@@ -22,6 +22,7 @@ class Users(Document):
 		'urls' : [{'url': unicode, 
 					'oldNotifications': int, 
 					'newNotifications':int, 
+					'addDate':datetime.datetime,
 					'updateDate':datetime.datetime,
 					'expirationDate': datetime.datetime}],
 		'totalNotifications' : int,

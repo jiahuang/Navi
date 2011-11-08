@@ -5,7 +5,7 @@ import gzip
 
 class Parser():
 	def getResult(self, url):
-		result = simplejson.load(urllib.urlopen(url))
+		result = simplejson.load(urllib2.urlopen(url))
 		if 'Error' in result:
 			raise Exception, "Error retreiving results for thread "+url
 		return result

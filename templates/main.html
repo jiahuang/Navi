@@ -16,7 +16,26 @@ $(document).ready(function() {
 				console.log(data);
 				if ('error' in data){
 					// TODO: swap this out for a flashed message
-					alert(data.error)
+					//alert(data.error)
+					$('#loginError').html(data.error);
+					$('#loginError').show();
+				}
+				else
+					window.location.reload();
+			},
+			'json'
+		)
+		return false;
+	});
+		
+	$('#newUserFormButton').click(function(){
+		$.post('/new', 
+			{ email: $('#email-login').val(), password: $('#pw-login').val()},
+			function(data){
+				console.log(data);
+				if ('error' in data){
+					$('#loginError').html(data.error);
+					$('#loginError').show();
 				}
 				else
 					window.location.reload();
@@ -26,51 +45,52 @@ $(document).ready(function() {
 		return false;
 	});
 	
-	$('#signupFormButton').click(function(){
-		$.post('/new', 
-			{ email: $('#email-signup').val(), password: $('#pw-signup').val()},
-			function(data){
-				console.log(data);
-				if ('error' in data)
-					alert(data.error)
-				else
-					window.location.reload();
-			},
-			'json'
-		)
-		return false;
-	});
-	
+	function insertRow(newNotifications, url, date, expired, id){
+		var tr = $('<tr>')
+			.append($('<td>')
+				.append($('<div>')
+					.attr('class', 'no_notification')
+					.text('0')
+				)
+			).append($('<td>')
+				.append($('<div>')
+					.attr('class', 'url')
+					.text(url)
+				)
+			).append($('<td>')
+				.append($('<div>')
+					.attr('class', 'time')
+					.text(date.getMonth()+"/"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds())
+				)
+			);
+		if (expired){
+			tr.append($('<td>')
+				.append($('<div>')
+					.attr('class', 'expired')
+					.text('expired')
+				)
+			)
+		}
+		else{
+			tr.append($('<td>')
+				.append($('<div>')
+				)
+			)
+		}
+		
+		tr.attr('id', id);
+		rowId++;
+		$('#urlTable tr:first').after(tr);
+	}
+		
 	$(document).keypress(function(e) {
-		if(e.keyCode == 13) {
+		if(e.keyCode == 13 && $("#addUrl").length > 0) {
 			// add item to dom
 			// grab url
 			var url = $('#addUrl').val();
 			var d = new Date();
 			var id = rowId;
-			var tr = $('<tr>')
-				.append($('<td>')
-					.append($('<div>')
-						.attr('class', 'no_notification')
-						.text('0')
-					)
-				).append($('<td>')
-					.append($('<div>')
-						.attr('class', 'url')
-						.text(url)
-					)
-				).append($('<td>')
-					.append($('<div>')
-						.attr('class', 'time')
-						.text(d.getMonth()+"/"+d.getDate()+" "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds())
-					)
-				).append($('<td>')
-					.append($('<div>')
-						.attr('class', 'expired')
-					)
-				).attr('id', id);
-			rowId++;
-			$('#urlTable tr:first').after(tr);
+			insertRow(0, url, d, id);
 			// add a url 
 			$.post('/urls', 
 				{'url':url},
@@ -85,8 +105,30 @@ $(document).ready(function() {
 				} 
 			)
 		}
-	});
-});
+	});	
+	
+	function getUrls(){
+		if ($("#addUrl").length > 0){
+			$.get('/urls', function(data){
+				console.log(data['urls']);
+				for (url in data['urls']){
+					// populate the table correctly
+					var offset = new Date().getTimezoneOffset()*60*1000*-1;
+					var date = new Date(data['urls'][url].addDate + offset);
+					var expireDate = new Date(data['urls'][url].expirationDate + offset);
+					var expired = false;
+					var current = new Date();
+					if (expireDate < current)
+						expired = true;
+					insertRow(data['urls'][url].newNotifications-data['urls'][url].oldNotifications, data['urls'][url].url, date, expired, rowId);
+				}
+			})
+		}
+	}
+	
+	getUrls();
+
+});	
 </script>
 
 {% endblock%}
@@ -99,15 +141,14 @@ $(document).ready(function() {
 				<td width="50px"><div class="notification" style="width:13px; margin-left:auto; margin-right:auto;">#</div></td>
 				<td width="600px"><div class="header" style="width:25px; margin-left:auto; margin-right:auto;">Url</div> </td>
 				<td width="80px"><div class="header" style="width:55px; margin-left:auto; margin-right:auto;">Added</div> </td>
-				<td width="80px"><div class="header" style="width:60px; margin-left:auto; margin-right:auto;">Expired</div></td>
+				<td width="80px"></td>
 			</tr>
 		</table>
 		
 	{% else %}
 		<div id="loginBox">
 			 <article class="tabs">
-				<section>
-					<h3>Log In</h3>
+				<section class="current">
 					<div>
 						<form id="loginForm">
 							<table>
@@ -130,14 +171,19 @@ $(document).ready(function() {
 								</tr>
 								<tr>
 									<td colspan="2">
-										<input type="submit" id="loginFormButton" style="float:right; margin-top:20px;" value="Log In"/>
+										<span id="loginError" style="display:none;"></span>
+										<br/>
+										<span style="float:right;">
+										<input type="submit" id="newUserFormButton" value="Create Account"/>
+										<input type="submit" id="loginFormButton" value="Log In"/>
+										</span>
 									</td>
 								</tr>
 							</table>
 						</form>
 					</div>
 				</section>
-				<section class="current">
+				<!--<section class="current">
 					<h3>Sign Up</h3>
 					<div>
 						<form id="signupForm">
@@ -167,9 +213,9 @@ $(document).ready(function() {
 							</table>
 						</form>
 					</div>
-				</section>
+				</section>-->
 			</article>
-
+			
 		</div>
 	{% endif %} 
 {% endblock %}

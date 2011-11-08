@@ -19,6 +19,7 @@ import bcrypt
 sys.path.append("Parsers/")
 from MasterParser import MasterParser
 from Models import *
+from operator import itemgetter
 
 ########################################################################
 # Configuration
@@ -43,7 +44,9 @@ def get_user():
 	return None
 
 def json_res(obj):
-	return Response(json.dumps(obj), mimetype='application/json')
+	# convert datetimes to miliseconds since epoch
+	dthandler = lambda obj: time.mktime(obj.timetuple())*1000 if isinstance(obj, datetime.datetime) else None
+	return Response(json.dumps(obj, default=dthandler), mimetype='application/json')
 
 ########################################################################
 # Routes
@@ -73,6 +76,11 @@ def logout():
 '''
 @app.route('/login', methods=['POST'])
 def login():
+	
+	# make sure neither value is blank
+	if not request.form.get('email') or not request.form.get('password'):
+		return json_res({'error':'Either the username or the password is not in our system'})
+		
 	user = db.Users.find_one({'email': request.form.get('email')})
 	
 	if not user:
@@ -89,7 +97,8 @@ def login():
 	session['logged_in'] = True
 	session['uid'] = user._id
 	session['email'] = get_user().email
-	
+	print get_user().urls
+	# get list of urls
 	return json_res({'loggedin':'true'})
 	
 '''
@@ -99,6 +108,11 @@ def login():
 '''
 @app.route('/new', methods=['POST'])
 def new():
+	
+	# make sure neither value is blank
+	if not request.form.get('email') or not request.form.get('password'):
+		return json_res({'error':'Either the username or the password is not in our system'})
+		
 	user = db.Users()
 	# check to make sure a user of that username and email doesn't already exist
 	checkUser = db.Users.find_one({'email':request.form.get('email')})
@@ -122,16 +136,23 @@ def new():
 /urls
 	Posts
 		adds url to user
+	Gets
+		returns list of added urls
 '''
-@app.route('/urls', methods=['POST'])
+@app.route('/urls', methods=['GET', 'POST'])
 def urls():
 	
 	user = get_user()
 	if user == None:
-		return json_res({'error':'You must be logged in for submitting urls'})
+		return json_res({'error':'You must be logged in'})
+	
+	if request.method == 'GET':
+		sortedUrls = sorted(user.urls, key=itemgetter('updateDate'))
+		print sortedUrls
+		return json_res({'urls':sortedUrls})
 		
-	currTime = datetime.datetime.now()
-	print request.form
+	currTime = datetime.datetime.utcnow()
+	#print request.form
 	url = request.form.get("url")
 	# use parser and find number of current comments
 	mParser = MasterParser()
@@ -141,8 +162,8 @@ def urls():
 		# collection update
 		db.users.update({'email':user.email}, {'$push':{'urls':{
 			'url':url, 'oldNotifications':comments, 
-			'newNotifications':comments, 'updateDate': currTime, 
-			'expirationDate': expireDate}}})
+			'newNotifications':comments, 'addDate': currTime, 
+			'updateDate': currTime, 'expirationDate': expireDate}}})
 	except:
 		e = sys.exc_info()[1]
 		return json_res({'error':str(e)})

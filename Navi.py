@@ -20,6 +20,7 @@ sys.path.append("Parsers/")
 from MasterParser import MasterParser
 from Models import *
 from operator import itemgetter
+from urlparse import urlparse
 
 ########################################################################
 # Configuration
@@ -128,9 +129,34 @@ def new():
 	
 	session['logged_in'] = True
 	session['uid'] = user._id
-	session['email'] = request.form['email']
+	session['email'] = user.email
 		
 	return json_res({'loggedin':'true'})
+
+'''
+/update
+	Posts
+		updates a specific url
+'''
+@app.route('/update', methods=['POST'])
+def update():
+	user = get_user()
+	if user == None:
+		return json_res({'error':'You must be logged in'})
+	
+	url = request.form.get("url")
+	delete = request.form.get("delete")
+	reset = request.form.get("reset")
+	notifications = request.form.get("notifications")
+	print url, reset, notifications, delete
+	if reset:
+		db.users.update({'email':user.email, 'urls.url':url}, 
+			{'$set':{'urls.$.oldNotifications':notifications, 'urls.$.updateDate':datetime.datetime.utcnow()}})
+	
+	if delete:
+		db.users.update({'email':user.email}, {'$pull':{'urls':{'url':url}}})
+	
+	return json_res({'error':'false'})
 	
 '''
 /urls
@@ -154,8 +180,14 @@ def urls():
 	currTime = datetime.datetime.utcnow()
 	#print request.form
 	url = request.form.get("url")
-	# use parser and find number of current comments
 	mParser = MasterParser()
+	# make sure url is properly formatted
+	urlparts = urlparse(url)
+	if not urlparts.scheme:
+		url = 'http://'+url
+		urlparts = urlparse(url)
+		
+	# use parser and find number of current comments
 	try:
 		comments = mParser.parseFromUrl(url)
 		expireDate = currTime + datetime.timedelta(days=user.expireDays)
@@ -164,6 +196,8 @@ def urls():
 			'url':url, 'oldNotifications':comments, 
 			'newNotifications':comments, 'addDate': currTime, 
 			'updateDate': currTime, 'expirationDate': expireDate}}})
+		# update cache
+		db.cachedUrls.save({"url":url, 'comments':comments, 'updatedDate':currTime, 'expirationDate':expireDate})
 	except:
 		e = sys.exc_info()[1]
 		return json_res({'error':str(e)})

@@ -165,6 +165,9 @@ body {
 	color: white;
 	padding: 2px 5px;
 	font-weight:bold;
+	margin-left: auto;
+	margin-right: auto;
+	width:20px;
 }
 
 .url{
@@ -207,4 +210,12 @@ body {
 	font-weight:bold;
 	color: white;
 	padding: 2px 5px;
+}
+
+.deleteButton{
+	height: 20px;
+	width: 20px;
+	background: url(close-button.png) no-repeat center center;
+	position: relative;
+	opacity: 80;
 }

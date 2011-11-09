@@ -45,40 +45,68 @@ $(document).ready(function() {
 		return false;
 	});
 	
-	function insertRow(newNotifications, url, date, expired, id){
+	$('.url').live('click', function(){
+		// reset notifications to zero
+		$(this).parent().parent().prev().html($('<div>').attr('class', 'no_notification').text('0'));
+		// call an update
+		$.post('/update',
+			{url:$(this).attr('href'), reset:true, notifications:$(this).attr("totalNotifications")}, 
+			function(data){
+				console.log(data);
+			},
+			'json'
+		)
+	});
+
+	$('.deleteButton').live('click', function(){
+		// delete this row
+		$(this).parent().parent().remove();
+		// call an update
+		$.post('/update',
+			{url:$(this).attr('url'), delete:true}, 
+			function(data){
+				console.log(data);
+			},
+			'json'
+		)
+	});
+	
+	function insertRow(newNotifications, totalNotifications, url, date, expired, id){
+		var notifyDiv = $('<div>').attr('class', 'no_notification').text('0');
+		if (newNotifications != 0)
+			notifyDiv = $('<div>').attr('class', 'notification').text(newNotifications);
+		
+		var expiredDiv = $('<div>');
+		if (expired)
+			expiredDiv = $('<div>').attr('class', 'expired').text('expired');
+		
 		var tr = $('<tr>')
 			.append($('<td>')
 				.append($('<div>')
-					.attr('class', 'no_notification')
-					.text('0')
+					.attr('class', 'deleteButton')
+					.attr('url', url)
 				)
+			)
+			.append($('<td>')
+				.append(notifyDiv)
 			).append($('<td>')
 				.append($('<div>')
-					.attr('class', 'url')
-					.text(url)
+					.append($('<a href="'+url+'">').text(url)
+						.attr('target', '_blank')
+						.attr('class', 'url')
+						.attr('totalNotifications', totalNotifications))
 				)
 			).append($('<td>')
 				.append($('<div>')
 					.attr('class', 'time')
 					.text(date.getMonth()+"/"+date.getDate()+" "+date.getHours()+":"+date.getMinutes()+":"+date.getSeconds())
 				)
-			);
-		if (expired){
-			tr.append($('<td>')
-				.append($('<div>')
-					.attr('class', 'expired')
-					.text('expired')
-				)
-			)
-		}
-		else{
-			tr.append($('<td>')
-				.append($('<div>')
-				)
-			)
-		}
+			).append($('<td>')
+				.append(expiredDiv)
+			).attr('id', id)
+			.attr('class', 'urlRow');
 		
-		tr.attr('id', id);
+		
 		rowId++;
 		$('#urlTable tr:first').after(tr);
 	}
@@ -90,7 +118,7 @@ $(document).ready(function() {
 			var url = $('#addUrl').val();
 			var d = new Date();
 			var id = rowId;
-			insertRow(0, url, d, id);
+			insertRow(0, 0, url, d, false, id);
 			// add a url 
 			$.post('/urls', 
 				{'url':url},
@@ -120,7 +148,9 @@ $(document).ready(function() {
 					var current = new Date();
 					if (expireDate < current)
 						expired = true;
-					insertRow(data['urls'][url].newNotifications-data['urls'][url].oldNotifications, data['urls'][url].url, date, expired, rowId);
+					console.log(data['urls'][url].newNotifications - data['urls'][url].oldNotifications);
+					
+					insertRow(data['urls'][url].newNotifications - data['urls'][url].oldNotifications, data['urls'][url].newNotifications, data['urls'][url].url, date, expired, rowId);
 				}
 			})
 		}
@@ -138,6 +168,7 @@ $(document).ready(function() {
 		<input type=text id="addUrl" ></input>
 		<table id="urlTable" style="width:800px; margin:30px auto; display:block;" border="0" cellspacing="0">
 			<tr id="headerRow" style="background-color:#CEE5F5; height:30px;">
+				<td width="30px"></td>
 				<td width="50px"><div class="notification" style="width:13px; margin-left:auto; margin-right:auto;">#</div></td>
 				<td width="600px"><div class="header" style="width:25px; margin-left:auto; margin-right:auto;">Url</div> </td>
 				<td width="80px"><div class="header" style="width:55px; margin-left:auto; margin-right:auto;">Added</div> </td>
@@ -183,37 +214,6 @@ $(document).ready(function() {
 						</form>
 					</div>
 				</section>
-				<!--<section class="current">
-					<h3>Sign Up</h3>
-					<div>
-						<form id="signupForm">
-							<table>
-								<tr>
-									<td align="right">
-										Email 
-									</td>
-									<td>
-										<input type="text"  name="email" id="email-signup"/>
-									</td>
-									
-								</tr>
-								<tr>
-									<td align="right">
-										Password 
-									</td>
-									<td>
-										<input type="password"  name="password" id="pw-signup"/> 
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">
-										<input type="submit" id="signupFormButton" style="float:right; margin-top:20px;" value="Create Account"/>
-									</td>
-								</tr>
-							</table>
-						</form>
-					</div>
-				</section>-->
 			</article>
 			
 		</div>

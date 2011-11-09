@@ -22,6 +22,7 @@ class RedditParser(Parser):
 	def getNotificationsFromUrl(self, url):
 		''' Takes in a link from reddit and returns number of comments'''
 		urlparts = urlparse(url)
+		
 		if urlparts.netloc != "www.reddit.com" and urlparts.netloc != "reddit.com":
 			raise Exception, "Site is not www.reddit.com"
 		

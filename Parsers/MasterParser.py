@@ -12,6 +12,7 @@ class MasterParser():
 		# TODO: Add other parsers
 			
 		raise Exception, "Site is not reddit.com"
+	
 '''
 m = MasterParser()
 url = "http://www.reddit.com/r/worldnews/comments/k9ap8/vancouver_lawyer_gail_davidson_seeks_dick_cheneys/"

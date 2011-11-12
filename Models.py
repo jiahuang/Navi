@@ -25,7 +25,6 @@ class Users(Document):
 					'addDate':datetime.datetime,
 					'updateDate':datetime.datetime,
 					'expirationDate': datetime.datetime}],
-		'totalNotifications' : int,
 	}
 	# ensuring unique emails
 	indexes = [ 

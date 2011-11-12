@@ -47,7 +47,10 @@ $(document).ready(function() {
 	
 	$('.url').live('click', function(){
 		// reset notifications to zero
-		$(this).parent().parent().prev().html($('<div>').attr('class', 'no_notification').text('0'));
+		var div = $(this).parent().parent().prev();
+		div.removeClass('notification');
+		div.addClass('no_notification');
+		div.html('0');
 		// call an update
 		$.post('/update',
 			{url:$(this).attr('href'), reset:true, notifications:$(this).attr("totalNotifications")}, 
@@ -71,14 +74,23 @@ $(document).ready(function() {
 		)
 	});
 	
-	function insertRow(newNotifications, totalNotifications, url, date, expired, id){
-		var notifyDiv = $('<div>').attr('class', 'no_notification').text('0');
-		if (newNotifications != 0)
-			notifyDiv = $('<div>').attr('class', 'notification').text(newNotifications);
-		
-		var expiredDiv = $('<div>');
+	function updateRow(url, newNotifications, oldNotifications, expired){
+		var notificationNum = $('div[url="'+url+'"].notificationNumber');
+		notificationNum.html(newNotifications-oldNotifications);
+		notificationNum.addClass('notification');
+		notificationNum.removeClass('no_notification');
 		if (expired)
-			expiredDiv = $('<div>').attr('class', 'expired').text('expired');
+			$('div[url="'+url+'"].notificationExpired').addClass('expired').html('expired');
+	}
+	
+	function insertRow(newNotifications, totalNotifications, url, date, expired, id){
+		var notifyDiv = $('<div>').attr('class', 'no_notification notificationNumber').attr('url', url).text('0');
+		if (newNotifications != 0)
+			notifyDiv = $('<div>').attr('class', 'notification notificationNumber').attr('url', url).text(newNotifications);
+		
+		var expiredDiv = $('<div>').attr('class', 'notificationExpired').attr('url', url);
+		if (expired)
+			expiredDiv = $('<div>').attr('class', 'expired notificationExpired').attr('url', url).text('expired');
 		
 		var tr = $('<tr>')
 			.append($('<td>')
@@ -116,9 +128,20 @@ $(document).ready(function() {
 			// add item to dom
 			// grab url
 			var url = $('#addUrl').val();
+			url = url.trim();
+			url = url.toLowerCase();
+			if (url == '')
+				return
+			
+			// if url lacks http add it
+			if (url.substring(7, 0) != 'http://')
+				url = 'http://'+url
+			
 			var d = new Date();
 			var id = rowId;
 			insertRow(0, 0, url, d, false, id);
+			// clear the input
+			$('#addUrl').val('');
 			// add a url 
 			$.post('/urls', 
 				{'url':url},
@@ -127,13 +150,44 @@ $(document).ready(function() {
 					// if item could not be correctly processed, flash message and delete added row
 					if (data.error != 'false'){
 						alert(data.error);
-						alert(id);
 						$('#'+id).remove();
 					}
 				} 
 			)
 		}
 	});	
+	
+	function isExpired(msSinceEpoch){
+		var offset = new Date().getTimezoneOffset()*60*1000*-1;
+		var expireDate = new Date(msSinceEpoch + offset);
+		var expired = false;
+		var current = new Date();
+		if (expireDate < current)
+			expired = true;
+	}
+	
+	function getUpdates(){
+		$.ajax({
+			type: "GET",
+			url: "/update",
+			async: true, 
+			cache: false,
+			timeout:50000, 
+			success: function(data){ 
+				//console.log('getting updates');
+				//console.log(data);
+				for (url in data['urls']){
+					var expired = isExpired(data['urls'][url].expirationDate);
+					updateRow(data['urls'][url].url, data['urls'][url].newNotifications, data['urls'][url].oldNotifications, expired);
+				}
+				setTimeout(getUpdates, 10000);
+			},
+			error: function(XMLHttpRequest, textStatus, errorThrown){
+				console.log(errorThrown);
+				setTimeout(getUpdates, 15000);
+			},
+		});
+	}
 	
 	function getUrls(){
 		if ($("#addUrl").length > 0){
@@ -143,13 +197,7 @@ $(document).ready(function() {
 					// populate the table correctly
 					var offset = new Date().getTimezoneOffset()*60*1000*-1;
 					var date = new Date(data['urls'][url].addDate + offset);
-					var expireDate = new Date(data['urls'][url].expirationDate + offset);
-					var expired = false;
-					var current = new Date();
-					if (expireDate < current)
-						expired = true;
-					console.log(data['urls'][url].newNotifications - data['urls'][url].oldNotifications);
-					
+					var expired = isExpired(data['urls'][url].expirationDate);
 					insertRow(data['urls'][url].newNotifications - data['urls'][url].oldNotifications, data['urls'][url].newNotifications, data['urls'][url].url, date, expired, rowId);
 				}
 			})
@@ -157,7 +205,7 @@ $(document).ready(function() {
 	}
 	
 	getUrls();
-
+	getUpdates();
 });	
 </script>
 
@@ -171,8 +219,8 @@ $(document).ready(function() {
 				<td width="30px"></td>
 				<td width="50px"><div class="notification" style="width:13px; margin-left:auto; margin-right:auto;">#</div></td>
 				<td width="600px"><div class="header" style="width:25px; margin-left:auto; margin-right:auto;">Url</div> </td>
-				<td width="80px"><div class="header" style="width:55px; margin-left:auto; margin-right:auto;">Added</div> </td>
-				<td width="80px"></td>
+				<td width="85px"><div class="header" style="width:55px; margin-left:auto; margin-right:auto;">Added</div> </td>
+				<td width="75px"></td>
 			</tr>
 		</table>
 		

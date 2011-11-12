@@ -137,12 +137,25 @@ def new():
 /update
 	Posts
 		updates a specific url
+	Gets
+		returns list of updated urls
 '''
-@app.route('/update', methods=['POST'])
+@app.route('/update', methods=['POST', 'GET'])
 def update():
 	user = get_user()
 	if user == None:
 		return json_res({'error':'You must be logged in'})
+	
+	now = datetime.datetime.utcnow()
+	if request.method == 'GET':
+		# loop through list of user urls, check for any differences in notifications
+		updates = []
+		for url in user.urls:
+			if int(url['newNotifications']) > int(url['oldNotifications']):
+				updates.append(url)
+		if updates:
+			return json_res({'urls':updates})
+		return json_res({'error':'false'})
 	
 	url = request.form.get("url")
 	delete = request.form.get("delete")
@@ -151,7 +164,7 @@ def update():
 	print url, reset, notifications, delete
 	if reset:
 		db.users.update({'email':user.email, 'urls.url':url}, 
-			{'$set':{'urls.$.oldNotifications':notifications, 'urls.$.updateDate':datetime.datetime.utcnow()}})
+			{'$set':{'urls.$.oldNotifications':notifications, 'urls.$.updateDate':now}})
 	
 	if delete:
 		db.users.update({'email':user.email}, {'$pull':{'urls':{'url':url}}})
@@ -197,7 +210,8 @@ def urls():
 			'newNotifications':comments, 'addDate': currTime, 
 			'updateDate': currTime, 'expirationDate': expireDate}}})
 		# update cache
-		db.cachedUrls.save({"url":url, 'comments':comments, 'updatedDate':currTime, 'expirationDate':expireDate})
+		db.cachedUrls.save({"url":url, 'comments':comments, 
+			'updatedDate':currTime, 'expirationDate':expireDate})
 	except:
 		e = sys.exc_info()[1]
 		return json_res({'error':str(e)})
